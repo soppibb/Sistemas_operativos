@@ -11,8 +11,8 @@
 
 // ****PENDIENTE********PENDIENTE********PENDIENTE****
 // hacer el codigo funcionar con los inputs reales
-// hacer que el umbral sea un parametro que se pase por consola
-// hacer que la carpeta de genomas sea un parametro que se pase por consola
+// hacer que el umbral sea un parametro que se pase por consola (listo)
+// hacer que la carpeta de genomas sea un parametro que se pase por consola(listo)
 // verificar que se cumplan los requisitos
 //verificar si esta bien hecho mutex y cv o rehacerlo
 // si logran q el jesus les revise la wea joya 100% real no fake no scam no cap no virus 2020 1 link mega mediafire (todo esto lo sugirio copilot y me parecio el epitome  de la comedia)
@@ -21,10 +21,10 @@
 
 using namespace std;
 
-string carpeta_genomas = "genomas/"; // donde estaran los genomas (esto debe ser un parametro en consola)****PENDIENTE****
 mutex queueMutex;// mutex para la cola de genomas aceptados
 condition_variable cv; // variable de condicion para la cola de genomas aceptados
 queue<string> genomasAceptados; // esta es la queue que el problema dice q hay q usar pa meter los q cumplen con el umbral
+float umbral; // Umbral para el contenido GC 
 bool finalizado = false;
 
 float calcular_promedio_GC(const string& genoma_file) { // calcula el promedio de GC de un genoma
@@ -90,10 +90,17 @@ void consumir_genomas() {// funcion que consume los genomas de la cola
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     vector<string> genomas = leer_genomas(carpeta_genomas);
     vector<thread> threads;
-    float umbral = 0.6; // Umbral para el contenido GC ****PENDIENTE****
+
+    if (argc < 3) { // verifica que se haya pasado al menos un argumento
+        cerr << "Error: No se proporcionó un umbral." << endl;
+        return 1;
+    }
+
+    umbral = atof(argv[1]); //convierte el argumento a float
+    carpeta_genomas = argv[2]; //convierte el argumento a string
 
     thread consumidor(consumir_genomas);//crea el thread que consume los genomas
 
