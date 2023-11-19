@@ -21,6 +21,7 @@
 
 using namespace std;
 
+string carpeta_genomas; // donde estaran los genomas a procesar
 mutex queueMutex;// mutex para la cola de genomas aceptados
 condition_variable cv; // variable de condicion para la cola de genomas aceptados
 queue<string> genomasAceptados; // esta es la queue que el problema dice q hay q usar pa meter los q cumplen con el umbral
