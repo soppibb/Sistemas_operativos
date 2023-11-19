@@ -13,13 +13,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-
 // ****PENDIENTE********PENDIENTE********PENDIENTE****
 // hacer el codigo funcionar con los inputs reales (listo)
 // hacer que el umbral sea un parametro que se pase por consola (listo)
 // hacer que la carpeta de genomas sea un parametro que se pase por consola(listo)
 // verificar que se cumplan los requisitos
-//verificar si esta bien hecho mutex y cv o rehacerlo
+//verificar si esta bien hecho mutex y cv o rehacerlo(listo)
+// hacer que el consumidor imprima los genomas aceptados (listo)
+//separar funciones en archivos por funciones
 // si logran q el jesus les revise la wea joya 100% real no fake no scam no cap no virus 2020 1 link mega mediafire (todo esto lo sugirio copilot y me parecio el epitome  de la comedia)
 // informe
 // ****PENDIENTE********PENDIENTE********PENDIENTE****
@@ -90,24 +91,20 @@ void consumir_genomas() {// funcion que consume los genomas de la cola
         cv.wait(lock, []{ return finalizado || !genomasAceptados.empty(); }); //espera a que haya un genoma en la cola o se finalice
         while (!genomasAceptados.empty()) { //mientras la cola no este vacia
             cout << "Genoma aceptado: " << genomasAceptados.front() << endl; //saca el genoma de la cola
-            genomasAceptados.pop();// lo saca de la cola (pop) 
-            //no se si esta wea esta bien xDDD ****PENDIENTE****
+            genomasAceptados.pop();// lo saca de la cola (pop)
         }
     }
 }
-
-
 
 int main(int argc, char* argv[]) {
 
     if (argc < 3) { // verifica que se haya pasado al menos un argumento
             cerr << "Error: No se proporcionó un umbral." << endl;
             return 1;
-        }
+    }
 
     umbral = atof(argv[1]); //convierte el argumento a float
     carpeta_genomas = argv[2]; //convierte el argumento a string
-
     vector<string> genomas = leer_genomas(carpeta_genomas);
     vector<thread> threads;
     thread consumidor(consumir_genomas);//crea el thread que consume los genomas
@@ -120,12 +117,9 @@ int main(int argc, char* argv[]) {
         t.join(); //espera a que todos los threads terminen
     }
 
-    {
-        lock_guard<mutex> lock(queueMutex); // lock para la cola de genomas aceptados
-        finalizado = true; //finaliza el programa
-    }
+    lock_guard<mutex> lock(queueMutex); // lock para la cola de genomas aceptados
+    finalizado = true; //finaliza el programa
     cv.notify_one(); //notifica a la variable de condicion que se finalizo
-
     consumidor.join(); //espera a que el consumidor termine
 
     return 0;
