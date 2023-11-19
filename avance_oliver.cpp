@@ -7,6 +7,11 @@
 #include <thread>
 #include <condition_variable>
 #include <queue>
+#include <string>
+#include <dirent.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 
 // ****PENDIENTE********PENDIENTE********PENDIENTE****
