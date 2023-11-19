@@ -15,7 +15,7 @@
 
 
 // ****PENDIENTE********PENDIENTE********PENDIENTE****
-// hacer el codigo funcionar con los inputs reales
+// hacer el codigo funcionar con los inputs reales (listo)
 // hacer que el umbral sea un parametro que se pase por consola (listo)
 // hacer que la carpeta de genomas sea un parametro que se pase por consola(listo)
 // verificar que se cumplan los requisitos
@@ -96,18 +96,20 @@ void consumir_genomas() {// funcion que consume los genomas de la cola
     }
 }
 
+
+
 int main(int argc, char* argv[]) {
-    vector<string> genomas = leer_genomas(carpeta_genomas);
-    vector<thread> threads;
 
     if (argc < 3) { // verifica que se haya pasado al menos un argumento
-        cerr << "Error: No se proporcionó un umbral." << endl;
-        return 1;
-    }
+            cerr << "Error: No se proporcionó un umbral." << endl;
+            return 1;
+        }
 
     umbral = atof(argv[1]); //convierte el argumento a float
     carpeta_genomas = argv[2]; //convierte el argumento a string
 
+    vector<string> genomas = leer_genomas(carpeta_genomas);
+    vector<thread> threads;
     thread consumidor(consumir_genomas);//crea el thread que consume los genomas
 
     for (const auto& genoma_file : genomas) { //crea un thread por cada genoma
