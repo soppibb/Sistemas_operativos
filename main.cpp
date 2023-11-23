@@ -96,6 +96,7 @@ void consumir_genomas() {// funcion que consume los genomas de la cola
         }
         cout<<"primer while"<<endl;
     }
+    cout<<"consumidor finalizado"<<endl;
 }
 
 int main(int argc, char* argv[]) {
