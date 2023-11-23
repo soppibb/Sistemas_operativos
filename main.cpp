@@ -31,7 +31,7 @@ string carpeta_genomas; // donde estaran los genomas a procesar
 mutex queueMutex;// mutex para la cola de genomas aceptados
 condition_variable cv; // variable de condicion para la cola de genomas aceptados
 queue<string> genomasAceptados; // esta es la queue que el problema dice q hay q usar pa meter los q cumplen con el umbral
-float umbral; // Umbral para el contenido GC 
+float umbral; // Umbral para el contenido GC
 bool finalizado = false;
 
 float calcular_promedio_GC(const string& genoma_file) { // calcula el promedio de GC de un genoma
@@ -55,7 +55,7 @@ float calcular_promedio_GC(const string& genoma_file) { // calcula el promedio d
     return genoma.empty() ? 0 : static_cast<float>(contador_GC) / genoma.size();
 }   // si esta vacio, devuelve cero. Si no lo esta, saca promedio (esto evita que se divida por 0)
 
-vector<string> leer_genomas(const string& carpeta_genomas) { //toma todos los ficheros y retorna un vector con el nombre 
+vector<string> leer_genomas(const string& carpeta_genomas) { //toma todos los ficheros y retorna un vector con el nombre
                                                             //de todos los archivos en una carpeta
     vector<string> genomas;
     DIR* directorio = opendir(carpeta_genomas.c_str()); //abre directorio
@@ -92,7 +92,9 @@ void consumir_genomas() {// funcion que consume los genomas de la cola
         while (!genomasAceptados.empty()) { //mientras la cola no este vacia
             cout << "Genoma aceptado: " << genomasAceptados.front() << endl; //saca el genoma de la cola
             genomasAceptados.pop();// lo saca de la cola (pop)
+            cout<<"while interno"<<endl;
         }
+        cout<<"primer while"<<endl;
     }
 }
 
@@ -105,22 +107,27 @@ int main(int argc, char* argv[]) {
 
     umbral = atof(argv[1]); //convierte el argumento a float
     carpeta_genomas = argv[2]; //convierte el argumento a string
+    if(carpeta_genomas[carpeta_genomas.length()-1]!='/')carpeta_genomas = carpeta_genomas + '/';
     vector<string> genomas = leer_genomas(carpeta_genomas);
     vector<thread> threads;
     thread consumidor(consumir_genomas);//crea el thread que consume los genomas
 
     for (const auto& genoma_file : genomas) { //crea un thread por cada genoma
+        cout<<"t"<<endl;
         threads.emplace_back(procesar_genoma, genoma_file, umbral);//crea el thread que procesa el genoma
     }
 
     for (auto& t : threads) {
+        cout<<"esperando"<<endl;
         t.join(); //espera a que todos los threads terminen
     }
 
     lock_guard<mutex> lock(queueMutex); // lock para la cola de genomas aceptados
+    cout<<"finalizado"<<endl;
     finalizado = true; //finaliza el programa
     cv.notify_one(); //notifica a la variable de condicion que se finalizo
-    consumidor.join(); //espera a que el consumidor termine
-
+    cout<<"cv"<<endl;
+    consumidor.join(); //espera a que el consumidor termine ACA ESTA MURIENDO ***ARREGLAR***
+    cout<<"consumidor"<<endl;
     return 0;
 }
