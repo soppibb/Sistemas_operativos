@@ -86,6 +86,7 @@ void procesar_genoma(const string& genoma_file, float umbral) { //procesa un gen
 }
 
 void consumir_genomas() {// funcion que consume los genomas de la cola
+    cout<<"consumidor iniciado"<<endl;
     unique_lock<mutex> lock(queueMutex);  // lock para la cola de genomas aceptados
     while (!finalizado || !genomasAceptados.empty()) { //mientras no se haya finalizado o la cola no este vacia
         cv.wait(lock, [&]{ return finalizado || !genomasAceptados.empty(); }); //espera a que haya un genoma en la cola o se finalice
@@ -113,14 +114,6 @@ int main(int argc, char* argv[]) {
     vector<thread> threads;
     thread consumidor(consumir_genomas);//crea el thread que consume los genomas
 
-    {
-        lock_guard<mutex> lock(queueMutex);
-        cout << "finalizado" << endl;
-        finalizado = true;
-    }
-    // Notificar al consumidor después de establecer finalizado en true
-    cv.notify_one();
-
     for (const auto& genoma_file : genomas) { //crea un thread por cada genoma
         cout<<"t"<<endl;
         threads.emplace_back(procesar_genoma, genoma_file, umbral);//crea el thread que procesa el genoma
@@ -130,6 +123,14 @@ int main(int argc, char* argv[]) {
         cout<<"esperando"<<endl;
         t.join(); //espera a que todos los threads terminen
     }
+
+    {
+        lock_guard<mutex> lock(queueMutex);
+        cout << "finalizado" << endl;
+        finalizado = true;
+    }
+    // Notificar al consumidor después de establecer finalizado en true
+    cv.notify_one();
 
     consumidor.join(); //espera a que el consumidor termine ACA ESTA MURIENDO ***ARREGLAR***
     cout<<"consumidor"<<endl;
