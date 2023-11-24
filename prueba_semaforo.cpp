@@ -55,7 +55,7 @@ vector<string> leer_genomas(const string& carpeta_genomas) {
     return genomas;
 }
 
-void procesar_genoma(const string& genoma_file, float umbral) {
+void procesar_genoma_semaforo(const string& genoma_file, float umbral) {
     float promedio = calcular_promedio_GC(genoma_file);
     if (promedio >= umbral) {
         sem_wait(&sem); // Espera a que el semáforo esté disponible
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
     sem_init(&sem, 0, 1); // Inicializa el semáforo
 
     for (const auto& genoma_file : genomas) {
-        threads.emplace_back(procesar_genoma, genoma_file, umbral);
+        threads.emplace_back(procesar_genoma_semaforo, genoma_file, umbral);
     }
 
     for (auto& t : threads) {

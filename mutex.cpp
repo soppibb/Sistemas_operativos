@@ -12,18 +12,27 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <semaphore.h>
+
+// ****PENDIENTE********PENDIENTE********PENDIENTE****
+// hacer el codigo funcionar con los inputs reales (listo)
+// hacer que el umbral sea un parametro que se pase por consola (listo)
+// hacer que la carpeta de genomas sea un parametro que se pase por consola(listo)
+// verificar que se cumplan los requisitos
+//verificar si esta bien hecho mutex y cv o rehacerlo(listo)
+// hacer que el consumidor imprima los genomas aceptados (listo)
+//separar funciones en archivos por funciones
+// si logran q el jesus les revise la wea joya 100% real no fake no scam no cap no virus 2020 1 link mega mediafire (todo esto lo sugirio copilot y me parecio el epitome  de la comedia)
+// informe
+// ****PENDIENTE********PENDIENTE********PENDIENTE****
 
 using namespace std;
 
-sem_t sem; // semáforo para la cola de genomas aceptados
 string carpeta_genomas; // donde estaran los genomas a procesar
 mutex queueMutex;// mutex para la cola de genomas aceptados
 condition_variable cv; // variable de condicion para la cola de genomas aceptados
 queue<string> genomasAceptados; // esta es la queue que el problema dice q hay q usar pa meter los q cumplen con el umbral
 float umbral; // Umbral para el contenido GC
 bool finalizado = false;
-string tipo;
 
 float calcular_promedio_GC(const string& genoma_file) { // calcula el promedio de GC de un genoma
     ifstream genoma_content(carpeta_genomas + genoma_file); // abrir el archivo del genoma (path y nombre del archivo)
@@ -66,7 +75,7 @@ vector<string> leer_genomas(const string& carpeta_genomas) { //toma todos los fi
     return genomas; //retorna el vector con los nombres de los archivos
 }
 
-void procesar_genoma_mutex(const string& genoma_file, float umbral) { //procesa un genoma y lo mete a la cola si cumple con el umbral
+void procesar_genoma(const string& genoma_file, float umbral) { //procesa un genoma y lo mete a la cola si cumple con el umbral
     float promedio = calcular_promedio_GC(genoma_file); //calcula el promedio de GC del genoma con la funcion que ya esta definida arriba
     if (promedio >= umbral) { //si el promedio es mayor o igual al umbral, lo mete a la cola
         lock_guard<mutex> lock(queueMutex);// lock para la cola de genomas aceptados
@@ -76,7 +85,7 @@ void procesar_genoma_mutex(const string& genoma_file, float umbral) { //procesa 
     //importante: "umbral" es un parametro que pasar por consola ****PENDIENTE****
 }
 
-void consumir_genomas_mutex() {// funcion que consume los genomas de la cola
+void consumir_genomas() {// funcion que consume los genomas de la cola
     cout<<"consumidor iniciado"<<endl;
     unique_lock<mutex> lock(queueMutex);  // lock para la cola de genomas aceptados
     while (!finalizado || !genomasAceptados.empty()) { //mientras no se haya finalizado o la cola no este vacia
@@ -91,51 +100,23 @@ void consumir_genomas_mutex() {// funcion que consume los genomas de la cola
     cout<<"consumidor finalizado"<<endl;
 }
 
-void procesar_genoma_semaforo(const string& genoma_file, float umbral) {
-    float promedio = calcular_promedio_GC(genoma_file);
-    if (promedio >= umbral) {
-        sem_wait(&sem); // Espera a que el semáforo esté disponible
-        genomasAceptados.push(genoma_file);
-        sem_post(&sem); // Libera el semáforo después de agregar el genoma
-    }
-}
-
-
-void consumir_genomas_semaforo() {
-    //cout << "consumidor iniciado" << endl;
-    while (!finalizado || !genomasAceptados.empty()) {
-        sem_wait(&sem); // Espera a que el semáforo esté disponible
-        while (!genomasAceptados.empty()) {
-            cout << "Genoma aceptado: " << genomasAceptados.front() << endl;
-            genomasAceptados.pop();
-            //cout << "while interno" << endl;
-        }
-        sem_post(&sem); // Libera el semáforo después de consumir genomas
-        //cout << "primer while" << endl;
-    }
-    //cout << "consumidor finalizado" << endl;
-}
-
 int main(int argc, char* argv[]) {
 
-    if (argc < 4) { 
-            cerr << "Error: No se proporcionaron los parametros necesarios." << endl;
+    if (argc < 3) { // verifica que se haya pasado al menos un argumento
+            cerr << "Error: No se proporcionó un umbral." << endl;
             return 1;
     }
 
     umbral = atof(argv[1]); //convierte el argumento a float
     carpeta_genomas = argv[2]; //convierte el argumento a string
-    tipo = argv[3]; //convierte el argumento a string
     if(carpeta_genomas[carpeta_genomas.length()-1]!='/')carpeta_genomas = carpeta_genomas + '/';
     vector<string> genomas = leer_genomas(carpeta_genomas);
     vector<thread> threads;
-    sem_init(&sem, 0, 1); // Inicializa el semáforo
-    thread consumidor;
-    if(tipo == "mutex"){
-        thread consumidor(consumir_genomas_mutex);//crea el thread que consume los genomas para mutex
+    thread consumidor(consumir_genomas);//crea el thread que consume los genomas
+
     for (const auto& genoma_file : genomas) { //crea un thread por cada genoma
         cout<<"t"<<endl;
-        threads.emplace_back(procesar_genoma_mutex, genoma_file, umbral);//crea el thread que procesa el genoma
+        threads.emplace_back(procesar_genoma, genoma_file, umbral);//crea el thread que procesa el genoma
     }
 
     for (auto& t : threads) {
@@ -150,28 +131,6 @@ int main(int argc, char* argv[]) {
     }
     // Notificar al consumidor después de establecer finalizado en true
     cv.notify_one();
-    }
-    else if(tipo == "sem"){
-        thread consumidor(consumir_genomas_semaforo);//crea el thread que consume los genomas para semaforo
-        for (const auto& genoma_file : genomas) {
-        threads.emplace_back(procesar_genoma_semaforo, genoma_file, umbral);
-    }
-
-    for (auto& t : threads) {
-        cout << "esperando" << endl;
-        t.join();
-    }
-
-    sem_wait(&sem); // Espera a que el semáforo esté disponible antes de finalizar
-    finalizado = true;
-    sem_post(&sem); // Libera el semáforo después de establecer finalizado en true
-    consumidor.join();
-    sem_destroy(&sem); // Destruye el semáforo
-    }
-    else{
-        cout << "Error en el tercer argumento" << endl;
-        return 0;
-    }
 
     consumidor.join(); //espera a que el consumidor termine ACA ESTA MURIENDO ***ARREGLAR***
     cout<<"consumidor"<<endl;
