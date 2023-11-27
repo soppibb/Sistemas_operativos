@@ -151,9 +151,15 @@ void consumir_genomas_semaforo() {
     }
     //cout << "consumidor finalizado" << endl;
 }
+void measureMemoryUsage() {
+    struct rusage usage;
+    getrusage(RUSAGE_SELF, &usage);
+
+    std::cout << "Memory used: " << usage.ru_maxrss << " kilobytes\n";
+}
 
 int main(int argc, char* argv[]) {
-
+    auto start = std::chrono::high_resolution_clock::now();
     if (argc < 3) { // verifica que se haya pasado al menos un argumento
             cerr << "Error: No se proporcionó un umbral." << endl;
             return 1;
@@ -212,5 +218,11 @@ int main(int argc, char* argv[]) {
 
      //espera a que el consumidor termine ACA ESTA MURIENDO ***ARREGLAR***
     cout<<"consumidor"<<endl;
+    auto end = std::chrono::high_resolution_clock::now(); // End time
+
+        // Calculate and print the time taken
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Time taken: " << elapsed.count() << " seconds\n";
+        measureMemoryUsage();
     return 0;
 }
