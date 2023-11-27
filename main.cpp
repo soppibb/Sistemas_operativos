@@ -87,6 +87,12 @@ void procesar_genoma(const string& genoma_file, float umbral, string option){
             sem_post(&sem); // Libera el semáforo después de agregar el genoma
         }
     }
+    else{
+        float promedio = calcular_promedio_GC(genoma_file);
+        if (promedio >= umbral) {
+            cout << "Genoma aceptado: " << genoma_file << endl;
+        }
+    }
 }
 
 void seleccionMutex(vector<string> genomas){
@@ -123,6 +129,12 @@ void seleccionSemaforo(vector<string> genomas){
     sem_post(&sem); // Libera el semáforo después de establecer finalizado en true
     consumidor.join();
     sem_destroy(&sem); // Destruye el semáforo
+}
+void seleccionLineal(vector<string> genomas){
+    for (const auto& genoma_file : genomas) {
+        procesar_genoma(genoma_file, umbral,"");
+    }
+    finalizado = true;
 }
 vector<string> leer_genomas(const string& carpeta_genomas) { //toma todos los ficheros y retorna un vector con el nombre
                                                             //de todos los archivos en una carpeta
@@ -164,9 +176,12 @@ int main(int argc, char* argv[]) {
     else if(tipo == "sem"){
         seleccionSemaforo(genomas);
     }
+    else if(tipo == "lineal"){
+        seleccionLineal(genomas);
+    }
     else{
-        cout << "Error en el tercer argumento" << endl;
-        return 0;
+        cerr << "Error: Tipo de sincronización no válido." << endl;
+        return 1;
     }
     return 0;
 }
