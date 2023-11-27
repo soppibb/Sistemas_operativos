@@ -170,18 +170,33 @@ int main(int argc, char* argv[]) {
     vector<thread> threads;
     sem_init(&sem, 0, 1); // Inicializa el semáforo
     thread consumidor;
+
+    auto function = seleccionLineal;
     if(tipo == "mutex"){
-        seleccionMutex(genomas);
+        function = seleccionMutex;
     }
     else if(tipo == "sem"){
-        seleccionSemaforo(genomas);
+        function = seleccionSemaforo;
     }
     else if(tipo == "lineal"){
-        seleccionLineal(genomas);
+        function = seleccionLineal;
     }
     else{
         cerr << "Error: Tipo de sincronización no válido." << endl;
         return 1;
     }
+
+    auto start = chrono::high_resolution_clock::now();
+    auto stop = chrono::high_resolution_clock::now();
+    double elapsed = 0;
+
+    start = chrono::high_resolution_clock::now();
+    function(genomas);
+    stop = chrono::high_resolution_clock::now();
+    elapsed += chrono::duration_cast<chrono::milliseconds>(stop - start).count();
+
+    printf("%f,%f\n", umbral, elapsed);
+
+
     return 0;
 }
