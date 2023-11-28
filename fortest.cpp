@@ -162,9 +162,8 @@ int main(int argc, char* argv[]) {
             return 1;
     }
 
-    umbral = atof(argv[1]); //convierte el argumento a float
-    carpeta_genomas = argv[2]; //convierte el argumento a string
-    tipo = argv[3]; //convierte el argumento a string
+    carpeta_genomas = argv[1]; //convierte el argumento a string
+    tipo = argv[2]; //convierte el argumento a string
     if(carpeta_genomas[carpeta_genomas.length()-1]!='/')carpeta_genomas = carpeta_genomas + '/';
     vector<string> genomas = leer_genomas(carpeta_genomas);
     vector<thread> threads;
@@ -172,31 +171,47 @@ int main(int argc, char* argv[]) {
     thread consumidor;
 
     auto function = seleccionLineal;
-    if(tipo == "mutex"){
-        function = seleccionMutex;
+    for (double umbral = 0.2; umbral <= 1; umbral += 0.2) {
+        if(tipo == "mutex"){
+            function = seleccionMutex;
+            auto start = chrono::high_resolution_clock::now();
+            auto stop = chrono::high_resolution_clock::now();
+            double elapsed = 0;
+
+            start = chrono::high_resolution_clock::now();
+            function(genomas);
+            stop = chrono::high_resolution_clock::now();
+            elapsed += chrono::duration_cast<chrono::milliseconds>(stop - start).count();
+            printf("%f,%f\n", umbral, elapsed);
+        }
+        else if(tipo == "sem"){
+            function = seleccionSemaforo;
+            auto start = chrono::high_resolution_clock::now();
+            auto stop = chrono::high_resolution_clock::now();
+            double elapsed = 0;
+
+            start = chrono::high_resolution_clock::now();
+            function(genomas);
+            stop = chrono::high_resolution_clock::now();
+            elapsed += chrono::duration_cast<chrono::milliseconds>(stop - start).count();
+            printf("%f,%f\n", umbral, elapsed);
+        }
+        else if(tipo == "lineal"){
+            function = seleccionLineal;
+            auto start = chrono::high_resolution_clock::now();
+            auto stop = chrono::high_resolution_clock::now();
+            double elapsed = 0;
+
+            start = chrono::high_resolution_clock::now();
+            function(genomas);
+            stop = chrono::high_resolution_clock::now();
+            elapsed += chrono::duration_cast<chrono::milliseconds>(stop - start).count();
+            printf("%f,%f\n", umbral, elapsed);
+        }
+        else{
+            cerr << "Error: Tipo de sincronización no válido." << endl;
+            return 1;
+        }
     }
-    else if(tipo == "sem"){
-        function = seleccionSemaforo;
-    }
-    else if(tipo == "lineal"){
-        function = seleccionLineal;
-    }
-    else{
-        cerr << "Error: Tipo de sincronización no válido." << endl;
-        return 1;
-    }
-
-    auto start = chrono::high_resolution_clock::now();
-    auto stop = chrono::high_resolution_clock::now();
-    double elapsed = 0;
-
-    start = chrono::high_resolution_clock::now();
-    function(genomas);
-    stop = chrono::high_resolution_clock::now();
-    elapsed += chrono::duration_cast<chrono::milliseconds>(stop - start).count();
-
-    printf("%f,%f\n", umbral, elapsed);
-
-
     return 0;
 }
